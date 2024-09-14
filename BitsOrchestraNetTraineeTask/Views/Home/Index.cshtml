@@ -1,0 +1,465 @@
+﻿@model UploadedFile
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+
+
+@using (Html.BeginForm("UploadCsv", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    <div>
+        <label>
+            <input type="file" asp-for="File" id="file" accept=".csv" hidden>
+            <button type="button" id="btn"> chose csv file </button>
+            <span id="span"></span>
+        </label>
+    </div>
+    <div><input type="submit" value="upload" /></div>
+    @if (ViewData["FileError"] != null)
+    {
+        <div>@ViewData["FileError"]</div>
+    }
+
+}
+
+<table>
+    <thead id="head">
+        <tr>
+            <th>
+                <input type="text" id="filter0" oninput="updateTable()" />
+            </th>
+            <th>
+                <input type="text" id="filter1" oninput="updateTable()" />
+            </th>
+            <th>
+                <input type="text" id="filter2" oninput="updateTable()" />
+            </th>
+            <th>
+                <input type="text" id="filter3" oninput="updateTable()" />
+            </th>
+            <th>
+                <input type="text" id="filter4" oninput="updateTable()" />
+            </th>
+        </tr>
+        <tr>
+            <th>
+                <span>sort</span>
+                <button onclick="changeSort(0,false)">asc</button>
+                <button onclick="changeSort(0,true)">desc</button>
+            </th>
+            <th>
+                <span>sort</span>
+                <button onclick="changeSort(1,false)">asc</button>
+                <button onclick="changeSort(1,true)">desc</button>
+            </th>
+            <th>
+                <span>sort</span>
+                <button onclick="changeSort(2,false)">asc</button>
+                <button onclick="changeSort(2,true)">desc</button>
+            </th>
+            <th>
+                <span>sort</span>
+                <button onclick="changeSort(3,false)">asc</button>
+                <button onclick="changeSort(3,true)">desc</button>
+            </th>
+            <th>
+                <span>sort</span>
+                <button onclick="changeSort(4,false)">asc</button>
+                <button onclick="changeSort(4,true)">desc</button>
+            </th>
+        </tr>
+        <tr>
+            <th>Name</th>
+            <th>Date of birth</th>
+            <th>Married</th>
+            <th>Phone</th>
+            <th>Salary</th>
+        </tr>
+    </thead>
+    <tbody id="data">
+    </tbody>
+</table>
+
+
+@section Scripts {
+    <script>
+        events = ['drag', 'dragstart', 'dragend', 'dragover', 'dragenter', 'dragleave', 'drop'];
+        let button = document.getElementById('btn');
+        let span = document.getElementById('span');
+        let file = document.getElementById('file');
+        for (const event of events) {
+            {
+                button.addEventListener(event, (e) =>
+                {
+                    e.stopPropagation();
+                    e.preventDefault();
+                })
+                span.addEventListener(event, (e) =>
+                {
+                    e.stopPropagation();
+                    e.preventDefault();
+                })
+            }
+        }
+        function dropFile(e)
+        {
+            file.files = e.dataTransfer.files;
+            span.innerHTML = e.dataTransfer.files[0].name;
+        }
+        button.addEventListener("drop", (e) =>
+        {
+            dropFile(e);
+        })
+        button.addEventListener("click", (e) =>
+        {
+            document.getElementById('file').click();
+        })
+        span.addEventListener("drop", (e) =>
+        {
+            dropFile(e);
+        })
+        file.addEventListener("change", () =>
+        {
+            if (file.files[0] != undefined) {
+                span.innerHTML = file.files[0].name;
+            }
+            else {
+                span.innerHTML = "";
+            }
+        })
+    </script>
+    <script>
+        let data = @Html.Raw(Json.Serialize(ViewData["Data"]));
+        // data.forEach((value) => { value.dateOfBirth = new Date(value.dateOfBirth).toISOString().slice(0, 10); });
+        let dataView = data;
+        let tableHead = document.getElementById("head");
+        let tableData = document.getElementById("data");
+        let sortRow = -1;
+        let sortDesc = false;
+        let filter0 = document.getElementById("filter0");
+        let filter1 = document.getElementById("filter1");
+        let filter2 = document.getElementById("filter2");
+        let filter3 = document.getElementById("filter3");
+        let filter4 = document.getElementById("filter4");
+
+        let changeSort = (row, desc) =>
+        {
+            sortRow = row;
+            sortDesc = desc;
+            updateTable();
+        }
+
+        let sortTable = () =>
+        {
+            //dataView = data.copy();
+            switch (sortRow) {
+                case -1:
+                    break;
+                case 0:
+                    if (sortDesc) {
+                        dataView = dataView.sort((a, b) =>
+                        {
+                            if (b.name < a.name)
+                                return -1;
+                            if (b.name > a.name)
+                                return 1;
+                            return 0;
+                        });
+                    }
+                    else {
+                        dataView = dataView.sort((a, b) =>
+                        {
+                            if (a.name < b.name)
+                                return -1;
+                            if (a.name > b.name)
+                                return 1;
+                            return 0;
+                        });
+                    }
+                    break;
+                case 1:
+                    if (sortDesc) {
+                        dataView = dataView.sort((a, b) => { return new Date(b.dateOfBirth) - new Date(a.dateOfBirth) });
+                    }
+                    else {
+                        dataView = dataView.sort((a, b) => { return new Date(a.dateOfBirth) - new Date(b.dateOfBirth) });
+                    }
+                    break;
+                case 2:
+                    if (sortDesc) {
+                        dataView = dataView.sort((a, b) =>
+                        {
+                            return (a.married === b.married ? 0 : a.married ? -1 : 1);
+                        });
+                    }
+                    else {
+                        dataView = dataView.sort((a, b) =>
+                        {
+                            return (a.married === b.married ? 0 : b.married ? -1 : 1);
+                        });
+                    }
+                    break;
+                case 3:
+                    if (sortDesc) {
+                        dataView = dataView.sort((a, b) =>
+                        {
+                            if (b.phone < a.phone)
+                                return -1;
+                            if (b.phone > a.phone)
+                                return 1;
+                            return 0;
+                        });
+                    }
+                    else {
+                        dataView = dataView.sort((a, b) =>
+                        {
+                            if (a.phone < b.phone)
+                                return -1;
+                            if (a.phone > b.phone)
+                                return 1;
+                            return 0;
+                        });
+                    }
+                    break;
+
+                case 4:
+                    if (sortDesc) {
+                        dataView = dataView.sort((a, b) => { return b.salary - a.salary });
+                    }
+                    else {
+                        dataView = dataView.sort((a, b) => { return a.salary - b.salary });
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        let filterTable = () =>
+        {
+            if (filter0.value != "") {
+                dataView = dataView.filter((item) => { return item.name.indexOf(filter0.value) >= 0 })
+            }
+            if (filter1.value != "") {
+                dataView = dataView.filter((item) => { return item.dateOfBirth.toString().indexOf(filter1.value) >= 0 })
+            }
+            if (filter2.value != "") {
+                dataView = dataView.filter((item) => { return item.married.toString().indexOf(filter2.value) >= 0 })
+            }
+            if (filter3.value != "") {
+                dataView = dataView.filter((item) => { return item.phone.indexOf(filter3.value) >= 0 })
+            }
+            if (filter4.value != "") {
+                dataView = dataView.filter((item) => { return item.salary.toString().indexOf(filter4.value) >= 0 })
+            }
+        }
+
+        let renderTable = () =>
+        {
+            tableData.innerHTML = '';
+            for (let i = 0; i < dataView.length; i++) {
+                let currentLine = document.createElement("tr");
+
+                let name = document.createElement("td");
+                name.innerHTML = dataView[i].name;
+                currentLine.appendChild(name);
+
+                let dateOfBirth = document.createElement("td");
+                dateOfBirth.innerHTML = dataView[i].dateOfBirth;
+                currentLine.appendChild(dateOfBirth);
+
+                let married = document.createElement("td");
+                married.innerHTML = dataView[i].married;
+                currentLine.appendChild(married);
+
+                let phone = document.createElement("td");
+                phone.innerHTML = dataView[i].phone;
+                currentLine.appendChild(phone);
+
+                let salary = document.createElement("td");
+                salary.innerHTML = dataView[i].salary;
+                currentLine.appendChild(salary);
+
+                let editCell = document.createElement("td");
+                let editBtn = document.createElement("button");
+                editBtn.innerHTML = "edit";
+                editBtn.onclick = () =>
+                {
+                    let record = { ...dataView[i] }
+                    currentLine.innerHTML = "";
+
+                    let nameCell = document.createElement("td");
+                    let nameInput = document.createElement("input");
+                    nameInput.type = "text";
+                    nameInput.value = record.name;
+                    nameCell.appendChild(nameInput);
+                    currentLine.appendChild(nameCell);
+
+                    let dateOfBirthCell = document.createElement("td");
+                    let dateOfBirthInput = document.createElement("input");
+                    dateOfBirthInput.type = "text";
+                    dateOfBirthInput.value = record.dateOfBirth;
+                    dateOfBirthCell.appendChild(dateOfBirthInput);
+                    currentLine.appendChild(dateOfBirthCell);
+
+                    let marriedCell = document.createElement("td");
+                    let marriedInput = document.createElement("input");
+                    marriedInput.type = "text";
+                    marriedInput.value = record.married;
+                    marriedCell.appendChild(marriedInput);
+                    currentLine.appendChild(marriedCell);
+
+                    let phoneCell = document.createElement("td");
+                    let phoneInput = document.createElement("input");
+                    phoneInput.type = "text";
+                    phoneInput.value = record.phone;
+                    phoneCell.appendChild(phoneInput);
+                    currentLine.appendChild(phoneCell);
+
+                    let salaryCell = document.createElement("td");
+                    let salaryInput = document.createElement("input");
+                    salaryInput.type = "text";
+                    salaryInput.value = record.salary;
+                    salaryCell.appendChild(salaryInput);
+                    currentLine.appendChild(salaryCell);
+
+                    let confirmCell = document.createElement("td");
+                    let confirmBtn = document.createElement("button");
+                    confirmBtn.innerHTML = "confirm";
+                    confirmBtn.onclick = () =>
+                    {
+                        let valid = true;
+                        nameInput.style.backgroundColor = "#ffffff";
+                        dateOfBirthInput.style.backgroundColor = "#ffffff";
+                        marriedInput.style.backgroundColor = "#ffffff";
+                        phoneInput.style.backgroundColor = "#ffffff";
+                        salaryInput.style.backgroundColor = "#ffffff";
+
+                        if (nameInput.value == "") {
+                            valid = false;
+                            nameInput.style.backgroundColor = "darksalmon";
+                        }
+                        if (dateOfBirthInput.value == "" || Date.parse(dateOfBirthInput.value) == NaN) {
+                            valid = false;
+                            dateOfBirthInput.style.backgroundColor = "darksalmon";
+                        }
+                        if (marriedInput.value == "" || !(marriedInput.value == "true" || marriedInput.value == "false")) {
+                            valid = false;
+                            marriedInput.style.backgroundColor = "darksalmon";
+                        }
+                        if (phoneInput.value == "") {
+                            valid = false;
+                            phoneInput.style.backgroundColor = "darksalmon";
+                        }
+                        if (salaryInput.value == "" || Number.parseFloat(salaryInput.value) == NaN) {
+                            valid = false;
+                            salaryInput.style.backgroundColor = "darksalmon";
+                        }
+                        if (valid) {
+                            record.name = nameInput.value;
+                            record.dateOfBirth = new Date(dateOfBirthInput.value).toISOString().slice(0, 10);
+                            record.married = marriedInput.value == "true" ? true : false;
+                            record.phone = phoneInput.value;
+                            record.salary = Number.parseFloat(salaryInput.value);
+
+                            editRecord(record.id, record);
+                        }
+                    };
+                    confirmCell.appendChild(confirmBtn);
+                    currentLine.appendChild(confirmCell);
+
+                    let cancelCell = document.createElement("td");
+                    let cancelBtn = document.createElement("button");
+                    cancelBtn.innerHTML = "cancel";
+                    cancelBtn.onclick = () =>
+                    {
+                        updateTable();
+                    };
+                    cancelCell.appendChild(cancelBtn);
+                    currentLine.appendChild(cancelCell);
+
+
+                    currentLine
+                }
+                editCell.appendChild(editBtn);
+                currentLine.appendChild(editCell);
+
+                let deleteCell = document.createElement("td");
+                let deleteBtn = document.createElement("button");
+                deleteBtn.innerHTML = "delete";
+                deleteBtn.onclick = () =>
+                {
+                    deleteRecord(dataView[i].id)
+                };
+                deleteCell.appendChild(deleteBtn);
+                currentLine.appendChild(deleteCell);
+
+                tableData.appendChild(currentLine);
+            }
+        }
+        let updateTable = () =>
+        {
+            dataView = [...data];
+            sortTable();
+            filterTable();
+            renderTable();
+        }
+
+        let deleteRecord = (id) =>
+        {
+            const xhr = new XMLHttpRequest();
+            xhr.onload = () =>
+            {
+                if (xhr.status == 200) {
+                    data = data.filter((item) => { return item.id != id });
+                    updateTable();
+                } else {
+                    console.log("Server response: ", xhr.statusText);
+                }
+            };
+            xhr.open("DELETE", "/Api/DeleteRecord/" + id);
+            xhr.send();
+        }
+
+        let editRecord = (id, record) =>
+        {
+            let recordDto = {
+                Name: record.name,
+                DateOfBirth: new Date(record.dateOfBirth),
+                Married: record.married,
+                Phone: record.phone,
+                Salary: record.salary
+            }
+            const xhr = new XMLHttpRequest();
+            xhr.onload = () =>
+            {
+                if (xhr.status == 200) {
+                    for (let i = 0; i < data.length; i++) {
+                        if (data[i].id == id) {
+                            data[i] = record;
+                        }
+                    }
+                    updateTable();
+                } else {
+                    console.log("Server response: ", xhr.statusText);
+                }
+            };
+            xhr.open("PATCH", "/Api/EditRecord/" + id);
+            xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+            //xhr.setRequestHeader('Data-Type', 'json');
+            xhr.send(JSON.stringify(recordDto));
+        }
+
+        let startEditing = (id) =>
+        {
+            let record = { ...userDetails }
+
+        }
+
+
+        updateTable();
+    </script>
+
+
+}
