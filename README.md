@@ -1,0 +1,1 @@
+requires environment variable DATABASE_CONNECTION_STRING
