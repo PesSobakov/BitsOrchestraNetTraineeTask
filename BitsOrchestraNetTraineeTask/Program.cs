@@ -1,4 +1,5 @@
 using BitsOrchestraNetTraineeTask.Models.Employee;
+using BitsOrchestraNetTraineeTask.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace BitsOrchestraNetTraineeTask
@@ -12,7 +13,8 @@ namespace BitsOrchestraNetTraineeTask
             // Add services to the container.
             builder.Services.AddControllersWithViews();
             builder.Services.AddDbContext<EmployeeContext>(
-              options => options.UseSqlServer(Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING")));
+              options => options.UseSqlServer(Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING"),(options)=>options.EnableRetryOnFailure()));
+            builder.Services.AddScoped<ICsvService,CsvService>();
           
             var app = builder.Build();
 

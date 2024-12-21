@@ -15,6 +15,7 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "DATABASE_CONNECTION_STRING": "Data Source=.;Initial Catalog=Employee;Integrated Security=True;TrustServerCertificate=True"
+        //"DATABASE_CONNECTION_STRING": "Server=tcp:sqlserverpessobakov.database.windows.net,1433;Initial Catalog=Employee;Persist Security Info=False;User ID=user;Password=Admin123;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:7083;http://localhost:5241"

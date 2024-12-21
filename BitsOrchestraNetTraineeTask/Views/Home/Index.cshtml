@@ -3,70 +3,73 @@
 @{
     ViewData["Title"] = "Home Page";
 }
-
-
-
-@using (Html.BeginForm("UploadCsv", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
-{
-    <div>
-        <label>
-            <input type="file" asp-for="File" id="file" accept=".csv" hidden>
-            <button type="button" id="btn"> chose csv file </button>
-            <span id="span"></span>
-        </label>
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div class="toast align-items-center bg-danger" role="alert" aria-live="assertive" aria-atomic="true" id="ErrorToast">
+        <div class="d-flex">
+            <div class="toast-body" id="ErrorMessage">
+                Hello, world! This is a toast message.
+            </div>
+            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
     </div>
-    <div><input type="submit" value="upload" /></div>
-    @if (ViewData["FileError"] != null)
-    {
-        <div>@ViewData["FileError"]</div>
-    }
+</div>
 
-}
+<div>
+    <div>
+        <div class="mb-3">
+            <label for="formFile" class="form-label">Upload csv file</label>
+            <input accept=".csv" class="form-control" type="file" id="formFile">
+        </div>
+    </div>
+    <div>
+        <input class="btn btn-primary" type="submit" value="upload" onclick="UploadCSV()"/>
+    </div>
+</div>
 
-<table>
+<table class="table">
     <thead id="head">
         <tr>
             <th>
-                <input type="text" id="filter0" oninput="updateTable()" />
+                <input class="form-control" type="text" id="filter0" oninput="updateTable()" />
             </th>
             <th>
-                <input type="text" id="filter1" oninput="updateTable()" />
+                <input class="form-control" type="text" id="filter1" oninput="updateTable()" />
             </th>
             <th>
-                <input type="text" id="filter2" oninput="updateTable()" />
+                <input class="form-control" type="text" id="filter2" oninput="updateTable()" />
             </th>
             <th>
-                <input type="text" id="filter3" oninput="updateTable()" />
+                <input class="form-control" type="text" id="filter3" oninput="updateTable()" />
             </th>
             <th>
-                <input type="text" id="filter4" oninput="updateTable()" />
+                <input class="form-control" type="text" id="filter4" oninput="updateTable()" />
             </th>
         </tr>
         <tr>
             <th>
                 <span>sort</span>
-                <button onclick="changeSort(0,false)">asc</button>
-                <button onclick="changeSort(0,true)">desc</button>
+                <button class="btn btn-primary" onclick="changeSort(0,false)">asc</button>
+                <button class="btn btn-primary" onclick="changeSort(0,true)">desc</button>
             </th>
             <th>
                 <span>sort</span>
-                <button onclick="changeSort(1,false)">asc</button>
-                <button onclick="changeSort(1,true)">desc</button>
+                <button class="btn btn-primary" onclick="changeSort(1,false)">asc</button>
+                <button class="btn btn-primary" onclick="changeSort(1,true)">desc</button>
             </th>
             <th>
                 <span>sort</span>
-                <button onclick="changeSort(2,false)">asc</button>
-                <button onclick="changeSort(2,true)">desc</button>
+                <button class="btn btn-primary" onclick="changeSort(2,false)">asc</button>
+                <button class="btn btn-primary" onclick="changeSort(2,true)">desc</button>
             </th>
             <th>
                 <span>sort</span>
-                <button onclick="changeSort(3,false)">asc</button>
-                <button onclick="changeSort(3,true)">desc</button>
+                <button class="btn btn-primary" onclick="changeSort(3,false)">asc</button>
+                <button class="btn btn-primary" onclick="changeSort(3,true)">desc</button>
             </th>
             <th>
                 <span>sort</span>
-                <button onclick="changeSort(4,false)">asc</button>
-                <button onclick="changeSort(4,true)">desc</button>
+                <button class="btn btn-primary" onclick="changeSort(4,false)">asc</button>
+                <button class="btn btn-primary" onclick="changeSort(4,true)">desc</button>
             </th>
         </tr>
         <tr>
@@ -84,53 +87,42 @@
 
 @section Scripts {
     <script>
-        events = ['drag', 'dragstart', 'dragend', 'dragover', 'dragenter', 'dragleave', 'drop'];
-        let button = document.getElementById('btn');
-        let span = document.getElementById('span');
-        let file = document.getElementById('file');
-        for (const event of events) {
+        let apiServer = "/";
+        let data = [];
+        let getData = () =>
+        {
+            const xhr = new XMLHttpRequest();
+            xhr.onload = () =>
             {
-                button.addEventListener(event, (e) =>
-                {
-                    e.stopPropagation();
-                    e.preventDefault();
-                })
-                span.addEventListener(event, (e) =>
-                {
-                    e.stopPropagation();
-                    e.preventDefault();
-                })
-            }
+                if (xhr.status == 200) {
+                    data = JSON.parse(xhr.response);
+                    updateTable();
+                } else {
+                    console.log("Server response: ", xhr.statusText);
+                }
+            };
+            xhr.open("GET", apiServer + "Api/GetRecords");
+            xhr.send();
         }
-        function dropFile(e)
+        let UploadCSV = () =>
         {
-            file.files = e.dataTransfer.files;
-            span.innerHTML = e.dataTransfer.files[0].name;
+            let file = document.getElementById("formFile").files[0];
+            let formData = new FormData();
+            formData.append("File", file);
+
+            const xhr = new XMLHttpRequest();
+            xhr.onload = () =>
+            {
+                if (xhr.status == 200) {
+                    getData();
+                } else if (xhr.status == 400) {
+                    showError("Csv parsing error");
+                }
+            };
+            xhr.open("POST", apiServer + "Api/UploadCsv");
+            xhr.send(formData);
         }
-        button.addEventListener("drop", (e) =>
-        {
-            dropFile(e);
-        })
-        button.addEventListener("click", (e) =>
-        {
-            document.getElementById('file').click();
-        })
-        span.addEventListener("drop", (e) =>
-        {
-            dropFile(e);
-        })
-        file.addEventListener("change", () =>
-        {
-            if (file.files[0] != undefined) {
-                span.innerHTML = file.files[0].name;
-            }
-            else {
-                span.innerHTML = "";
-            }
-        })
-    </script>
-    <script>
-        let data = @Html.Raw(Json.Serialize(ViewData["Data"]));
+        getData();
         // data.forEach((value) => { value.dateOfBirth = new Date(value.dateOfBirth).toISOString().slice(0, 10); });
         let dataView = data;
         let tableHead = document.getElementById("head");
@@ -284,6 +276,7 @@
                 let editCell = document.createElement("td");
                 let editBtn = document.createElement("button");
                 editBtn.innerHTML = "edit";
+                editBtn.classList = "btn btn-primary";
                 editBtn.onclick = () =>
                 {
                     let record = { ...dataView[i] }
@@ -293,6 +286,7 @@
                     let nameInput = document.createElement("input");
                     nameInput.type = "text";
                     nameInput.value = record.name;
+                    nameInput.classList = ["form-control"];
                     nameCell.appendChild(nameInput);
                     currentLine.appendChild(nameCell);
 
@@ -300,6 +294,7 @@
                     let dateOfBirthInput = document.createElement("input");
                     dateOfBirthInput.type = "text";
                     dateOfBirthInput.value = record.dateOfBirth;
+                    dateOfBirthInput.classList = ["form-control"];
                     dateOfBirthCell.appendChild(dateOfBirthInput);
                     currentLine.appendChild(dateOfBirthCell);
 
@@ -307,6 +302,7 @@
                     let marriedInput = document.createElement("input");
                     marriedInput.type = "text";
                     marriedInput.value = record.married;
+                    marriedInput.classList = ["form-control"];
                     marriedCell.appendChild(marriedInput);
                     currentLine.appendChild(marriedCell);
 
@@ -314,6 +310,7 @@
                     let phoneInput = document.createElement("input");
                     phoneInput.type = "text";
                     phoneInput.value = record.phone;
+                    phoneInput.classList = ["form-control"];
                     phoneCell.appendChild(phoneInput);
                     currentLine.appendChild(phoneCell);
 
@@ -321,12 +318,14 @@
                     let salaryInput = document.createElement("input");
                     salaryInput.type = "text";
                     salaryInput.value = record.salary;
+                    salaryInput.classList = ["form-control"];
                     salaryCell.appendChild(salaryInput);
                     currentLine.appendChild(salaryCell);
 
                     let confirmCell = document.createElement("td");
                     let confirmBtn = document.createElement("button");
                     confirmBtn.innerHTML = "confirm";
+                    confirmBtn.classList = "btn btn-primary";
                     confirmBtn.onclick = () =>
                     {
                         let valid = true;
@@ -372,6 +371,7 @@
                     let cancelCell = document.createElement("td");
                     let cancelBtn = document.createElement("button");
                     cancelBtn.innerHTML = "cancel";
+                    cancelBtn.classList = "btn btn-primary";
                     cancelBtn.onclick = () =>
                     {
                         updateTable();
@@ -379,8 +379,6 @@
                     cancelCell.appendChild(cancelBtn);
                     currentLine.appendChild(cancelCell);
 
-
-                    currentLine
                 }
                 editCell.appendChild(editBtn);
                 currentLine.appendChild(editCell);
@@ -388,6 +386,7 @@
                 let deleteCell = document.createElement("td");
                 let deleteBtn = document.createElement("button");
                 deleteBtn.innerHTML = "delete";
+                deleteBtn.classList = "btn btn-primary";
                 deleteBtn.onclick = () =>
                 {
                     deleteRecord(dataView[i].id)
@@ -442,10 +441,17 @@
                     }
                     updateTable();
                 } else {
-                    console.log("Server response: ", xhr.statusText);
+                    let errors =JSON.parse (xhr.response).errors;
+                    let message = "";
+                    for(let errorKey in errors){
+                        for (let errorValue of errors[errorKey]) {
+                            message += errorKey + ": "+ errorValue + "<br>";
+                        }
+                    }
+                    showError(message);
                 }
             };
-            xhr.open("PATCH", "/Api/EditRecord/" + id);
+            xhr.open("PATCH", apiServer+ "Api/EditRecord/" + id);
             xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
             //xhr.setRequestHeader('Data-Type', 'json');
             xhr.send(JSON.stringify(recordDto));
@@ -459,6 +465,19 @@
 
 
         updateTable();
+
+        let errorMessage = document.getElementById('ErrorMessage');
+        let myAlert = document.getElementById('ErrorToast');
+        let bsAlert = new bootstrap.Toast(myAlert);
+
+        let showError = (message) =>
+        {
+            errorMessage.innerHTML = message;
+            bsAlert.show();
+        }
+        //showError("old error");
+
+
     </script>
 
 
